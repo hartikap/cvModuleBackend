@@ -1,0 +1,63 @@
+#!/usr/bin/python
+
+from Adafruit_PWM_Servo_Driver import PWM
+import time
+import fileinput
+
+# ===========================================================================
+# Python PWM-driver
+# To be used with pca9685 12-bit PWM/Servo Driver with I2C interface
+# Communicates via stdin: enter the desired pulse length
+# TBD: return value to stdout(if needed)
+# ===========================================================================
+
+# Initialise the PWM device using the default address
+pwm = PWM(0x40)
+# Note if you'd like more debug output you can instead run:
+#pwm = PWM(0x40, debug=True)
+
+servoMin = 0  # Min pulse length out of 4096
+servoMax = 2000  # Max pulse length out of 4096
+
+def setServoPulse(channel, pulse):
+  pulseLength = 1000000                   # 1,000,000 us per second
+  pulseLength /= 60                       # 60 Hz
+  print "%d us per period" % pulseLength
+  pulseLength /= 4096                     # 12 bits of resolution
+  print "%d us per bit" % pulseLength
+  pulse *= 1000
+  pulse /= pulseLength
+  pwm.setPWM(channel, 0, pulse)
+
+def channelToNumber(char):
+    switcher = {
+      'A': 0,
+      'B': 3,
+      'C': 4,
+    }
+    return switcher.get(char, 0)
+    
+
+  
+pwm.setPWMFreq(60)                        # Set frequency to 60 Hz
+while (True):
+  # Change speed of continuous servo on channel O
+  try:
+    dataIn = raw_input()
+    channel = channelToNumber(dataIn[0])
+    pulseLength = int(dataIn[1:])
+    if (0 < pulseLength >= 4096):
+        raise ValueError()
+  except ValueError:
+    print "enter int-value between 0-4095"
+  else:
+    pwm.setPWM(channel, 0, pulseLength)
+  #except:
+  #  print "Error"
+  
+
+    
+  #time.sleep(1)
+  #pwm.setPWM(0, 0, servoMax)
+  #time.sleep(1)
+
